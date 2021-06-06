@@ -71,7 +71,7 @@ int Display_Tick(int state) {
 unsigned char ballVector = 0x00;
 //first bit: 0 is right, 1 is left
 //second bit: 1 is down, 0 is up
-unsigned char ballVelocity = 1;
+unsigned char ballVelocity = 1, ballCurve = 0;
 unsigned char ballRow = 0x03, ballRowDisplay = 0x10, ballCol = 4;
 
 
@@ -268,12 +268,13 @@ int Ball_Tick(int state){
 						ToggleX();
 						ballRow--;
 						ballVelocity = 2;
+						ballCurve = 1;
 					} else if (playerPosition == ballCol){
 						ToggleY();
 						ballRow--;
 						ballVelocity = 1;
 					} else {
-						ballVector = 0x03, ballRow = 0x01, ballRowDisplay = 0x08, ballCol = 3;
+						ballVector = 0x03, ballRow = 0x01, ballRowDisplay = 0x08, ballCol = 3, ballVelocity = 1;
 						//end game
 					}
 				}
@@ -287,38 +288,43 @@ int Ball_Tick(int state){
 						ToggleX();
 						ballRow++;
 						ballVelocity = 2;
+						ballCurve = 1;
 					} else if (AIPosition == ballCol){
 						ToggleY();
 						ballRow++;
 						ballVelocity = 1;
 					} else {
 						//end game
-						ballVector = 0x00, ballRow = 0x03, ballRowDisplay = 0x10, ballCol = 4;
+						ballVector = 0x00, ballRow = 0x03, ballRowDisplay = 0x10, ballCol = 4, ballVelocity = 1;
 					}
 				}
 			}
 
 			//handle left/right movement
-			if (ballVector & 0x01){
-				//going left
-				if (ballRowDisplay <= 0x40){
-					ballRowDisplay <<= 1;
-					ballCol++;
-				} else {
-					//if col 7, change directions
-					ToggleX();
-					ballRowDisplay >>= 1;
-					ballCol--;
-				}
+			if (ballCurve){
+				ballCurve = 0;
 			} else {
-				if (ballRowDisplay >= 0x02){
-					ballRowDisplay >>= 1;
-					ballCol--;
+				if (ballVector & 0x01){
+					//going left
+					if (ballRowDisplay <= 0x40){
+						ballRowDisplay <<= 1;
+						ballCol++;
+					} else {
+						//if col 7, change directions
+						ToggleX();
+						ballRowDisplay >>= 1;
+						ballCol--;
+					}
 				} else {
-					//if col 0, change directions
-					ToggleX();
-					ballRowDisplay <<= 1;
-					ballCol++;
+					if (ballRowDisplay >= 0x02){
+						ballRowDisplay >>= 1;
+						ballCol--;
+					} else {
+						//if col 0, change directions
+						ToggleX();
+						ballRowDisplay <<= 1;
+						ballCol++;
+					}
 				}
 			}
 			break;
