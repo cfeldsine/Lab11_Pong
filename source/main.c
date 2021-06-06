@@ -71,6 +71,7 @@ int Display_Tick(int state) {
 unsigned char ballVector = 0x00;
 //first bit: 0 is right, 1 is left
 //second bit: 1 is down, 0 is up
+unsigned char ballVelocity = 1;
 unsigned char ballRow = 0x03, ballRowDisplay = 0x10, ballCol = 4;
 
 
@@ -262,17 +263,15 @@ int Ball_Tick(int state){
 					ballRow++;
 				} else {
 					//at bottom row, check for collision
-					if (playerPosition-1 == ballCol) {
+					if (playerPosition-1 == ballCol || playerPosition+1 == ballCol) {
 						ToggleY();
 						ToggleX();
 						ballRow--;
-					} else if (playerPosition+1 == ballCol){
-						ToggleY();
-						ToggleX();
-						ballRow--;
+						ballVelocity = 2;
 					} else if (playerPosition == ballCol){
 						ToggleY();
 						ballRow--;
+						ballVelocity = 1;
 					} else {
 						ballVector = 0x03, ballRow = 0x01, ballRowDisplay = 0x08, ballCol = 3;
 						//end game
@@ -283,17 +282,15 @@ int Ball_Tick(int state){
 				if (ballRow > 1){
 					ballRow--;
 				} else {
-					if (AIPosition-1 == ballCol) {
+					if (AIPosition-1 == ballCol || AIPosition + 1 == ballCol) {
 						ToggleY();
 						ToggleX();
 						ballRow++;
-					} else if (AIPosition+1 == ballCol){
-						ToggleY();
-						ToggleX();
-						ballRow++;
+						ballVelocity = 2;
 					} else if (AIPosition == ballCol){
 						ToggleY();
 						ballRow++;
+						ballVelocity = 1;
 					} else {
 						//end game
 						ballVector = 0x00, ballRow = 0x03, ballRowDisplay = 0x10, ballCol = 4;
@@ -389,12 +386,22 @@ int main(void) {
     /* Insert your solution below */
     while (1) {
       for (i=0; i<numTasks; i++) {
-        if (tasks[i]->elapsedTime == tasks[i]->period){
+        if (tasks[i]->elapsedTime >= tasks[i]->period){
           tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
           tasks[i]->elapsedTime = 0;
         }
         tasks[i]->elapsedTime += GCD;
       }
+
+			if (ballVelocity == 2){
+				if (task3.elapsedTime > 500){
+					task3.elapsedTime -= 500;
+				}
+				task3.period = 500;
+			} else {
+				task3.period = 1000;
+			}
+
       while(!TimerFlag);
       TimerFlag = 0;
     }
